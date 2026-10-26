@@ -1,0 +1,497 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>DemoReady - Online English Teacher Demo-Lesson Simulator</title>
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+
+  <!-- ================= App Header ================= -->
+  <header class="app-header">
+    <div class="logo-group">
+      <div class="logo-badge">DR</div>
+      <div class="logo-title">
+        <h1>DemoReady</h1>
+        <p>Online English Teacher Demo-Lesson Simulator</p>
+      </div>
+    </div>
+
+    <!-- Progressive Navigation -->
+    <nav class="stage-nav" aria-label="Simulator Stages">
+      <button class="nav-btn active" id="navStage1" onclick="switchStage(1)">
+        <span>1. Name Drill</span>
+        <span class="badge-pill">30s</span>
+      </button>
+      <button class="nav-btn" id="navStage2" onclick="switchStage(2)">
+        <span>2. Error Catch Drill</span>
+        <span class="badge-pill">6s</span>
+      </button>
+      <button class="nav-btn" id="navStage3" onclick="switchStage(3)">
+        <span>3. Full Simulation</span>
+        <span class="badge-pill">5m</span>
+      </button>
+    </nav>
+
+    <button class="history-btn" id="openHistoryBtn" onclick="openHistoryModal()">
+      <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+      <span>Session History</span>
+      <span class="badge-pill" id="historyCounter">0</span>
+    </button>
+  </header>
+
+  <!-- ================= Main Container ================= -->
+  <main class="app-container">
+
+    <!-- ================= STAGE 1: Name Drill (30 Seconds) ================= -->
+    <section class="stage-view active-view" id="stage1View">
+      <div class="drill-wrapper">
+        <div class="drill-header">
+          <h2>Stage 1: The 15-Second Name Drill</h2>
+          <p>On platforms like Native Camp and Engoo, failing to introduce yourself and state your student's name in the opening ~15 seconds is an <strong>automatic critical fail</strong>. Practice stating both names here first.</p>
+        </div>
+
+        <div class="calm-card">
+          <div class="critical-rule-banner">
+            <strong>Platform Rule:</strong> You must clearly speak or write both <em>your name</em> and the <em>student's name</em> right as the lesson begins.
+          </div>
+
+          <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
+            <div class="form-group">
+              <label class="form-label" for="s1TeacherName">Your Name (Teacher) *</label>
+              <input type="text" id="s1TeacherName" class="form-input" placeholder="e.g. Sarah" value="Sarah" oninput="validateStage1Inputs()">
+            </div>
+            <div class="form-group">
+              <label class="form-label" for="s1StudentName">Student's Name *</label>
+              <input type="text" id="s1StudentName" class="form-input" placeholder="e.g. Kenji" value="Kenji" oninput="validateStage1Inputs()">
+            </div>
+          </div>
+
+          <!-- Drill Countdown Display -->
+          <div class="drill-timer-display">
+            <span>⏱️</span>
+            <span id="s1TimerText">30s</span>
+          </div>
+
+          <!-- Detection Badges -->
+          <div class="detected-tags-row">
+            <div class="detected-tag missing" id="s1TagTeacher">
+              <span>Your Name:</span>
+              <strong id="s1TagTeacherStatus">Waiting...</strong>
+            </div>
+            <div class="detected-tag missing" id="s1TagStudent">
+              <span>Student Name:</span>
+              <strong id="s1TagStudentStatus">Waiting...</strong>
+            </div>
+          </div>
+
+          <!-- Live Spoken Transcript or Greeting Input -->
+          <div class="form-group" style="margin-top: 1rem;">
+            <label class="form-label">Say or Type your opening greeting:</label>
+            <div style="display: flex; gap: 0.5rem;">
+              <input type="text" id="s1GreetingInput" class="form-input" placeholder="e.g. 'Hello! My name is Sarah, and what is your name, Kenji?'" onkeydown="if(event.key==='Enter') checkStage1InputGreeting()">
+              <button class="btn-secondary" onclick="checkStage1InputGreeting()">Check</button>
+            </div>
+            <p style="font-size: 0.78rem; color: var(--text-muted); margin-top: 0.35rem;">
+              🎙️ If microphone is enabled, you can speak aloud naturally! Or type above and press Enter.
+            </p>
+          </div>
+
+          <div style="display: flex; gap: 0.75rem; margin-top: 1.25rem;">
+            <button class="btn-primary" id="s1StartBtn" onclick="startStage1Drill()" style="flex: 1;">
+              Start 30-Second Drill
+            </button>
+            <button class="btn-secondary" onclick="resetStage1()">
+              Reset
+            </button>
+          </div>
+
+          <!-- Mock Student Reply Bubble (plays right after user states both names) -->
+          <div class="mock-dialogue-bubble hidden" id="s1MockReplyBox" style="margin-top: 1rem; background: rgba(13, 148, 136, 0.15); border: 1px solid rgba(20, 184, 166, 0.4); border-radius: 8px; padding: 0.85rem 1rem; display: flex; align-items: center; gap: 0.75rem;">
+            <div style="font-size: 1.6rem;">🧑‍🎓</div>
+            <div>
+              <div style="font-size: 0.78rem; font-weight: 700; color: var(--accent); text-transform: uppercase; letter-spacing: 0.5px;">Student Response</div>
+              <div id="s1MockReplyText" style="font-size: 0.95rem; font-weight: 500; color: #f8fafc; margin-top: 0.15rem;"></div>
+            </div>
+          </div>
+
+          <!-- Feedback Box -->
+          <div class="feedback-card hidden" id="s1Feedback">
+            <div class="feedback-icon" id="s1FeedbackIcon">✅</div>
+            <div>
+              <strong id="s1FeedbackTitle">Great Job!</strong>
+              <p id="s1FeedbackMsg" style="font-size: 0.88rem; margin-top: 0.2rem;"></p>
+            </div>
+          </div>
+
+          <!-- Bottom Navigation Skip -->
+          <div style="display: flex; justify-content: space-between; align-items: center; margin-top: 1.5rem; padding-top: 1rem; border-top: 1px solid rgba(255,255,255,0.08);">
+            <button class="btn-secondary" onclick="switchStage(2)">
+              Next: Stage 2 (Error Drill) &rarr;
+            </button>
+            <button class="btn-secondary" style="color: var(--accent); border-color: rgba(56, 189, 248, 0.3);" onclick="switchStage(3)">
+              Skip to Full Simulation &rarr;
+            </button>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ================= STAGE 2: Error-Catching Drill (6s Window) ================= -->
+    <section class="stage-view" id="stage2View">
+      <div class="drill-wrapper">
+        <div class="drill-header">
+          <h2>Stage 2: The 6-Second Error Catch Drill</h2>
+          <p>Interviews plant deliberate grammar mistakes. You have <strong>6 seconds</strong> to catch and flag them. Practice your reaction time here in a low-pressure environment before the full lesson.</p>
+        </div>
+
+        <div class="calm-card">
+          <div class="info-banner">
+            <strong>Training Goal:</strong> Listen to the simulated student speaking out loud. The moment you hear a grammar error, click <strong>"Flag Correction"</strong> or speak the correction within 6 seconds.
+          </div>
+
+          <!-- Simulated Student Speech Box -->
+          <div class="student-speech-box" id="s2StudentBox">
+            <div class="audio-visualizer-bar" id="s2Visualizer">
+              <div class="audio-bar"></div>
+              <div class="audio-bar"></div>
+              <div class="audio-bar"></div>
+              <div class="audio-bar"></div>
+              <div class="audio-bar"></div>
+            </div>
+            <div class="student-dialogue-text" id="s2SpeechText">
+              Press "Play Student Line" to begin drill...
+            </div>
+          </div>
+
+          <!-- Action Reaction Section -->
+          <div class="reaction-action-box">
+            <button class="flag-error-btn" id="s2FlagBtn" onclick="flagStage2Error()" disabled>
+              <span>🚩</span>
+              <span>FLAG CORRECTION</span>
+            </button>
+
+            <!-- 6s Linear Countdown Bar -->
+            <div class="reaction-timer-progress">
+              <div class="reaction-timer-bar" id="s2TimerBar"></div>
+            </div>
+            <span style="font-size: 0.8rem; color: var(--text-muted);" id="s2WindowLabel">Reaction window: 6.0s</span>
+          </div>
+
+          <!-- Controls -->
+          <div style="display: flex; gap: 0.75rem; justify-content: center; flex-wrap: wrap;">
+            <button class="btn-primary" id="s2PlayBtn" onclick="playStage2Line()">
+              🔊 Play Student Line
+            </button>
+            <button class="btn-secondary" onclick="switchStage2Line()">
+              🔄 Try Next Sample Error
+            </button>
+          </div>
+
+          <!-- Feedback Box -->
+          <div class="feedback-card hidden" id="s2Feedback">
+            <div class="feedback-icon" id="s2FeedbackIcon">⚡</div>
+            <div>
+              <strong id="s2FeedbackTitle">Feedback</strong>
+              <p id="s2FeedbackMsg" style="font-size: 0.88rem; margin-top: 0.2rem;"></p>
+              <div id="s2GrammarTip" style="font-size: 0.82rem; color: #cbd5e1; margin-top: 0.35rem; background: rgba(0,0,0,0.25); padding: 0.4rem 0.6rem; border-radius: 4px;"></div>
+            </div>
+          </div>
+
+          <!-- Bottom Navigation -->
+          <div style="display: flex; justify-content: space-between; align-items: center; margin-top: 1.5rem; padding-top: 1rem; border-top: 1px solid rgba(255,255,255,0.08);">
+            <button class="btn-secondary" onclick="switchStage(1)">
+              &larr; Back to Stage 1
+            </button>
+            <button class="btn-primary" onclick="switchStage(3)">
+              Graduate to Stage 3 (Full Simulation) &rarr;
+            </button>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ================= STAGE 3: Full Simulation ================= -->
+    <section class="stage-view" id="stage3View">
+
+      <!-- Setup Screen (Visible before session starts) -->
+      <div class="sim-setup-card" id="simSetupScreen">
+        <div class="calm-card">
+          <div style="margin-bottom: 1.25rem;">
+            <h2 style="font-size: 1.4rem; margin-bottom: 0.3rem;">Stage 3: Full Rehearsal Simulation</h2>
+            <p style="color: var(--text-secondary); font-size: 0.9rem;">
+              Combines camera self-view, live student speech, 5-minute timer, and real-time error evaluation. Set your details below to start.
+            </p>
+          </div>
+
+          <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; margin-bottom: 1.25rem;">
+            <div class="form-group">
+              <label class="form-label" for="simTeacherName">Your Name (Teacher) *</label>
+              <input type="text" id="simTeacherName" class="form-input" placeholder="e.g. Teacher Sarah" value="Sarah" oninput="validateSetupInputs()">
+            </div>
+            <div class="form-group">
+              <label class="form-label" for="simStudentName">Student's Name *</label>
+              <input type="text" id="simStudentName" class="form-input" placeholder="e.g. Kenji" value="Kenji" oninput="validateSetupInputs()">
+            </div>
+          </div>
+
+          <!-- Script Selector Cards -->
+          <div class="form-group">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.5rem;">
+              <label class="form-label" style="margin-bottom: 0;">Select Lesson Script</label>
+              <button class="btn-secondary" style="padding: 0.25rem 0.6rem; font-size: 0.78rem;" onclick="randomizeScript()">🎲 Randomize</button>
+            </div>
+            <div class="script-card-picker" id="scriptPickerList">
+              <!-- Dynamically populated from LESSON_SCRIPTS -->
+            </div>
+          </div>
+
+          <!-- Media Permissions / Fallback Notice -->
+          <div class="permissions-note-box">
+            <div>
+              <strong style="color: var(--text-primary); display: block; font-size: 0.9rem;">Camera & Microphone</strong>
+              <span class="permissions-text" id="permissionsNoticeText">
+                Clicking start will request camera and microphone for authentic video call practice. If denied, the simulator seamlessly runs in text-caption mode.
+              </span>
+            </div>
+            <label style="display: flex; align-items: center; gap: 0.4rem; font-size: 0.8rem; color: var(--text-secondary); cursor: pointer;">
+              <input type="checkbox" id="skipMediaToggle">
+              <span>Text-only mode</span>
+            </label>
+          </div>
+
+          <button class="btn-primary" id="startSimulationBtn" onclick="startFullSimulation()" style="width: 100%; font-size: 1.05rem; padding: 0.85rem;">
+            Enable Camera & Start Simulation (5:00)
+          </button>
+        </div>
+      </div>
+
+      <!-- Active Simulation Room (Two-Column Layout) -->
+      <div class="simulation-room" id="simRoom">
+        <div class="sim-grid">
+          
+          <!-- Left Panel: Lesson Script / Teacher's Guide -->
+          <section class="script-panel">
+            <div class="panel-header">
+              <div class="panel-title">
+                <span>📖 Teacher's Lesson Guide</span>
+              </div>
+              <div style="display: flex; align-items: center; gap: 0.75rem;">
+                <label style="display: flex; align-items: center; gap: 0.35rem; font-size: 0.78rem; color: var(--text-secondary); cursor: pointer;" title="Automatically advances script lines with natural interview pacing">
+                  <input type="checkbox" id="autoAdvanceToggle" checked onchange="toggleAutoAdvance(this.checked)">
+                  <span>Auto-Pace</span>
+                </label>
+                <div class="step-indicator" id="lessonStepIndicator">Step 1 of 14</div>
+              </div>
+            </div>
+            <div class="script-lines-scroll" id="scriptLinesContainer">
+              <!-- Script lines rendered dynamically -->
+            </div>
+            <div style="padding: 0.65rem 1rem; background: var(--bg-surface-subtle); border-top: 1px solid rgba(255,255,255,0.08); display: flex; justify-content: space-between;">
+              <button class="btn-secondary" style="font-size: 0.8rem; padding: 0.4rem 0.8rem;" onclick="previousScriptLine()">
+                &larr; Prev Line
+              </button>
+              <button class="btn-secondary" style="font-size: 0.8rem; padding: 0.4rem 0.8rem;" onclick="replayCurrentLineSpeech()">
+                🔊 Replay Student Audio
+              </button>
+              <button class="btn-primary" style="font-size: 0.8rem; padding: 0.4rem 0.8rem;" onclick="advanceScriptLine()">
+                Next Line &rarr;
+              </button>
+            </div>
+          </section>
+
+          <!-- Right Panel: Student Video & Classroom -->
+          <section class="student-panel">
+            <div class="panel-header">
+              <div class="panel-title">
+                <span>🎓 Classroom Video Call</span>
+              </div>
+              <div style="display: flex; align-items: center; gap: 0.5rem;">
+                <span class="status-pill pill-pass" id="speechRecogBadge">🎙️ Listening</span>
+              </div>
+            </div>
+
+            <div class="student-stage-viewport" id="studentViewport">
+              
+              <!-- PiP Self-Camera Box -->
+              <div class="self-camera-container">
+                <video id="selfVideo" autoplay playsinline muted></video>
+                <div class="camera-fallback-placeholder hidden" id="selfVideoFallback">
+                  <span>📷</span>
+                  <span>Text Mode</span>
+                </div>
+                <div class="camera-status-tag" id="selfCameraTag">Self View</div>
+              </div>
+
+              <!-- Student Avatar & Audio Wave -->
+              <div class="student-avatar-wrap" id="studentAvatarWrap">
+                <div class="student-avatar-circle">
+                  <span id="studentAvatarEmoji">🧑‍🎓</span>
+                </div>
+                <span class="student-name-label" id="activeStudentLabel">Kenji</span>
+              </div>
+
+              <!-- Live Captions Box -->
+              <div class="caption-box">
+                <p class="caption-text" id="liveCaptionText">
+                  Connecting to student...
+                </p>
+              </div>
+
+              <!-- Planted Error Overlay Trigger (Appears when student makes deliberate error) -->
+              <div class="error-trigger-overlay" id="errorOverlay">
+                <div class="flag-action-banner">
+                  <div class="flag-action-top">
+                    <span class="flag-action-title">
+                      ⚠️ Grammar Error Planted!
+                    </span>
+                    <span class="flag-seconds-badge" id="flagSecBadge">6.0s</span>
+                  </div>
+                  <div class="flag-mini-progress">
+                    <div class="flag-mini-bar" id="flagMiniBar"></div>
+                  </div>
+                  <button class="flag-btn-hit" onclick="handleSimulationErrorCatch()">
+                    🚩 CLICK TO FLAG CORRECTION (OR SPEAK IT NOW)
+                  </button>
+                </div>
+              </div>
+
+            </div>
+          </section>
+        </div>
+
+        <!-- Bottom Bar: Controls, Live Transcript & Countdown Timer -->
+        <footer class="bottom-dock">
+          <!-- Live Transcript -->
+          <div class="transcript-area">
+            <div class="transcript-label">
+              <span>🎙️ Live Speech Recognition:</span>
+              <span id="nameCheckBadge" class="status-pill" style="font-size: 0.68rem;">Names check pending...</span>
+            </div>
+            <div class="transcript-text" id="userLiveTranscript">
+              Say something aloud to speak with the student...
+            </div>
+          </div>
+
+          <!-- Fallback Type Input for corrections -->
+          <div class="fallback-type-group">
+            <input type="text" id="typeCorrectionInput" class="form-input" placeholder="Type correction here (fallback)..." onkeydown="if(event.key==='Enter') sendTypedCorrection()">
+            <button class="btn-secondary" onclick="sendTypedCorrection()">Send</button>
+          </div>
+
+          <!-- 5:00 Master Timer -->
+          <div class="master-timer-box">
+            <span class="master-timer-label">Time Remaining</span>
+            <span class="master-timer-nums" id="masterTimerNums">05:00</span>
+          </div>
+
+          <!-- End Session Button -->
+          <button class="btn-danger" onclick="endSessionPrompt()">
+            End Session Now
+          </button>
+        </footer>
+      </div>
+
+    </section>
+
+  </main>
+
+  <!-- ================= SCORECARD & RESULTS MODAL ================= -->
+  <div class="modal-overlay" id="resultsModal">
+    <div class="results-card">
+      <div class="results-header">
+        <div class="score-badge-circle badge-pass-bg" id="resultScoreBadge">
+          ✓
+        </div>
+        <h2 class="results-title" id="resultTitleText">Simulation Completed!</h2>
+        <p class="results-subtitle" id="resultSubtitleText">Here is your interview performance breakdown.</p>
+      </div>
+
+      <!-- Critical Name Check Alert Banner -->
+      <div id="resultNameCheckBanner" class="info-banner">
+        <!-- Injected dynamically -->
+      </div>
+
+      <!-- Detailed Score Table -->
+      <table class="score-table">
+        <thead>
+          <tr>
+            <th>Grading Criteria</th>
+            <th>Platform Expectation</th>
+            <th>Result</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td><strong>Opening Names Check</strong></td>
+            <td>State both names in first 15 seconds</td>
+            <td id="resColNames"><span class="status-pill pill-pass">Passed</span></td>
+          </tr>
+          <tr>
+            <td><strong>Planted Error 1</strong></td>
+            <td>Catch within 6-second window</td>
+            <td id="resColError1"><span class="status-pill pill-pass">Caught (2.1s)</span></td>
+          </tr>
+          <tr>
+            <td><strong>Planted Error 2</strong></td>
+            <td>Catch within 6-second window</td>
+            <td id="resColError2"><span class="status-pill pill-pass">Caught (3.4s)</span></td>
+          </tr>
+          <tr>
+            <td><strong>Pacing / Time Used</strong></td>
+            <td>Finish lesson within 5:00</td>
+            <td id="resColTime">3m 45s</td>
+          </tr>
+        </tbody>
+      </table>
+
+      <!-- Feedback / Tips -->
+      <div style="background: var(--bg-main); border-radius: var(--radius-md); padding: 1rem; margin-top: 1rem; font-size: 0.85rem; color: #cbd5e1;">
+        <strong style="color: var(--text-primary); display: block; margin-bottom: 0.25rem;">💡 Interviewer Feedback & Tip:</strong>
+        <p id="resultActionableTip">Good pacing and warm tone! Always remember to praise the student before correcting.</p>
+      </div>
+
+      <!-- Actions -->
+      <div class="results-actions">
+        <button class="btn-primary" onclick="restartFromScorecard()">Try Again</button>
+        <button class="btn-secondary" onclick="exportLatestSessionCSV()">Export as CSV</button>
+        <button class="btn-secondary" onclick="closeModalAndShowHistory()">View History</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ================= SESSION HISTORY MODAL ================= -->
+  <div class="modal-overlay" id="historyModal">
+    <div class="results-card" style="max-width: 820px;">
+      <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem;">
+        <div>
+          <h2 style="font-size: 1.35rem; font-weight: 800;">Rehearsal Session History</h2>
+          <p style="color: var(--text-secondary); font-size: 0.85rem;">Records stored locally in your browser.</p>
+        </div>
+        <button class="btn-secondary" onclick="closeHistoryModal()">✕ Close</button>
+      </div>
+
+      <!-- History Table Container -->
+      <div class="history-table-wrap" id="historyTableContainer">
+        <!-- Rendered dynamically -->
+      </div>
+
+      <div style="display: flex; justify-content: space-between; align-items: center; margin-top: 1rem; padding-top: 1rem; border-top: 1px solid rgba(255,255,255,0.08);">
+        <button class="btn-secondary" style="color: #fca5a5; border-color: rgba(239, 68, 68, 0.3);" onclick="clearAllHistory()">
+          Clear History
+        </button>
+        <div style="display: flex; gap: 0.5rem;">
+          <button class="btn-primary" onclick="exportHistoryToCSV()">
+            📥 Export All as CSV
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Scripts -->
+  <script src="scripts-data.js"></script>
+  <script src="app.js"></script>
+</body>
+</html>
